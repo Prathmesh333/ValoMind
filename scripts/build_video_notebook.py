@@ -30,7 +30,11 @@ modules = {
 }
 helpers = {
     name: (ROOT / "scripts" / name).read_text(encoding="utf-8")
-    for name in ["prepare_portrait_dataset.py", "evaluate_segment_review.py"]
+    for name in [
+        "prepare_portrait_dataset.py",
+        "evaluate_segment_review.py",
+        "audit_historical_vct.py",
+    ]
 }
 cell(
     "code",
@@ -55,7 +59,7 @@ for name, source in helpers.items():
 sys.path.insert(0, str(package.parent))
 for name in list(sys.modules):
     if name == 'valomind_video' or name.startswith('valomind_video.') or name in {
-        'prepare_portrait_dataset', 'evaluate_segment_review'}:
+        'prepare_portrait_dataset', 'evaluate_segment_review', 'audit_historical_vct'}:
         del sys.modules[name]
 from valomind_video.pipeline import channel_videos, download, process, merge
 from valomind_video.roster import export_rosters
@@ -181,6 +185,82 @@ for url in SELECTED_URLS:
     if not any(row['processing_action'] == 'extract' for row in decisions):
         print('No gameplay/roster extraction admitted. Inspect probe text in segments.csv; '
               'the preview may be an intro, or this HUD layout may need tuning.')
+""",
+)
+cell(
+    "markdown",
+    """## POV evidence and optional ViT features
+Run the next cell to export up to six four-second native-frame review windows per job.
+These are coverage samples, not detected actions or confirmed player POVs. Review each window
+for cuts, replays, X-ray, and player identity. No reaction-time or psychological labels are generated.
+See docs/POV_AND_VISUAL_FEATURES.md for CSV fields and review instructions.
+""",
+)
+cell(
+    "code",
+    """from valomind_video.pov import propose_windows, extract_windows, export_timings
+# PyAV decodes original presentation timestamps without frame-rate conversion.
+subprocess.run([sys.executable, '-m', 'pip', 'install', '-q', 'av>=14,<17'], check=True)
+EXTRACT_POV_WINDOWS = True
+FRAME_MANIFESTS = []
+for output in outputs:
+    manifest = json.loads((output.parent / 'manifest.json').read_text())
+    source = WORK_ROOT / 'sources' / manifest['video_id'] / 'video.mp4'
+    if not source.is_file():
+        from valomind_video.acquisition import cached_video
+        source = cached_video(source.parent, manifest['video_id'])
+    windows = propose_windows(output.parent / 'segments.csv', limit=6, seconds=4)
+    # Or replace windows with [{'start_seconds': 28, 'end_seconds': 32}].
+    if EXTRACT_POV_WINDOWS and windows:
+        if not source:
+            raise ValueError('Restore the original source video first.')
+        frame_csvs = extract_windows(source, output.parent / 'pov_review', windows,
+                                    expected_sha256=manifest['source_sha256'])
+        FRAME_MANIFESTS.extend(frame_csvs)
+        print('Frame evidence:', frame_csvs)
+        print('Copy and annotate:', output.parent / 'pov_review' / 'pov_events_to_review.csv')
+# Annotate first visible cue/action frames with the preceding frames checked.
+# No manual event is auto-approved. Empty or unverified evidence produces no numeric latency.
+REVIEWED_POV_EVENTS = None
+if REVIEWED_POV_EVENTS:
+    print(export_timings(REVIEWED_POV_EVENTS, FRAME_MANIFESTS,
+                         Path(REVIEWED_POV_EVENTS).with_name('response_windows.csv')))
+""",
+)
+cell(
+    "code",
+    """# Optional frozen ViT: unlabeled features and a diverse sample review queue.
+# No facecam embeddings, action claims, automatic training labels, or model training here.
+RUN_VIT = False
+VIT_SAMPLES_CSV = ''  # Reviewed gameplay/character crops; see documentation for columns.
+if RUN_VIT:
+    subprocess.run([sys.executable, '-m', 'pip', 'install', '-q',
+                    'transformers>=4.57,<5', 'safetensors>=0.4'], check=True)
+    from huggingface_hub import model_info
+    from valomind_video.visual_features import DinoEncoder, export_features
+    # Resolve once and record the immutable checkpoint SHA in every embedding record.
+    revision = model_info('facebook/dinov2-small').sha
+    encoder = DinoEncoder(revision, device='cuda:0')
+    print(export_features(VIT_SAMPLES_CSV, WORK_ROOT / 'visual_features.jsonl', encoder,
+                          batch_size=4))
+    del encoder
+    import torch
+    torch.cuda.empty_cache()
+""",
+)
+cell(
+    "code",
+    """# Optional audit of a Kaggle dataset already attached to this notebook or in Drive.
+# Audit only: does not merge external display names into verified player identities.
+HISTORICAL_CSV = None  # e.g. '/kaggle/input/.../vlrscrape1.4.csv'
+HISTORICAL_ENCODING = 'utf-8-sig'  # LA summary CSV needs 'cp1252'.
+if HISTORICAL_CSV:
+    from audit_historical_vct import audit
+    report = audit(HISTORICAL_CSV, encoding=HISTORICAL_ENCODING)
+    target = WORK_ROOT / 'historical_audits' / (report['source_sha256'] + '.json')
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(report, indent=2), encoding='utf-8')
+    print(json.dumps(report, indent=2))
 """,
 )
 cell(

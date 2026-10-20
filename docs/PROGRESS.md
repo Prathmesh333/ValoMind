@@ -1,3 +1,23 @@
+# 20 October 2026 — POV evidence and optional frozen ViT
+
+Added bounded native-PTS window extraction, resumable frame evidence manifests,
+an event review template and evidence-gated video cue-to-action latency exports.
+Original-footage smoke check: 24 frames in 28.0–28.4 seconds, successful cache reuse.
+No action labels or latency estimates were invented for this smoke check.
+
+Added optional DINOv2-small CUDA:0 feature export with reviewed crop restrictions,
+immutable checkpoint provenance, unlabeled vectors and a diverse review queue.
+Local tests use a synthetic encoder; actual T4 inference/training remains untested.
+No trained action classifier, crosshair tracker or psychological inference exists.
+
+Audited actual Kaggle Tokyo/LA CSVs and sampled the larger VCT provider tables.
+Added a reusable CSV audit and optional notebook audit cell. Historical identities
+are not automatically merged. See POV_AND_VISUAL_FEATURES.md and
+HISTORICAL_VCT_DATA_REVIEW.md for coverage, limitations and next integration work.
+Validation: 91 tests passed with optional Pillow installed; Ruff checks/format pass.
+This increment does not complete M0/M1/M2. Earlier foundation notes below describe
+their original snapshot, not the later private notebook reviews.
+
 # Implementation status — 2026-10-20
 
 M0 remains incomplete. No later milestone is marked complete.

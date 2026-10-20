@@ -118,7 +118,7 @@ This recovery applies to the existing video, not new blocked YouTube links.
 )
 cell(
     "code",
-    """SOURCE_ARCHIVE = None  # e.g. '/content/drive/MyDrive/valomind_results.zip'
+    """SOURCE_ARCHIVE = '/content/drive/MyDrive/valomind_results.zip'
 if SOURCE_ARCHIVE:
     if str(SOURCE_ARCHIVE).startswith('/content/drive/'):
         from google.colab import drive

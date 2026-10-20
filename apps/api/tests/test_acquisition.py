@@ -11,6 +11,7 @@ from valomind_video.acquisition import (
     cached_video,
     detect_runtime,
     download_error_message,
+    restore_source_archive,
     youtube_options,
 )
 from valomind_video.pipeline import download
@@ -83,3 +84,57 @@ def test_downloader_passes_runtime_and_stops_on_auth_failure(tmp_path, monkeypat
         download("https://youtu.be/abcdefghijk", tmp_path, js_runtime=runtime)
     assert captured["js_runtimes"] == runtime
     assert "proxy" not in captured
+
+
+def test_restore_prior_archive_checks_hash_and_only_restores_source(tmp_path, monkeypatch):
+    import hashlib
+    from zipfile import ZipFile
+
+    key = "abcdefghijk"
+    payload = b"synthetic completed video"
+    archive = tmp_path / "prior.zip"
+    with ZipFile(archive, "w") as bundle:
+        bundle.writestr(f"sources/{key}/video.info.json", json.dumps({"id": key, "duration": 120}))
+        bundle.writestr(f"sources/{key}/video.mp4", payload)
+        bundle.writestr(
+            "jobs/demo/manifest.json",
+            json.dumps({"video_id": key, "source_sha256": hashlib.sha256(payload).hexdigest()}),
+        )
+        bundle.writestr("../../unwanted.txt", "do not extract")
+    monkeypatch.setattr(
+        "valomind_video.acquisition.cached_video",
+        lambda folder, key: folder / "video.mp4" if (folder / "video.mp4").is_file() else None,
+    )
+    root = tmp_path / "work"
+    result = restore_source_archive(archive, root, key)
+    assert result.read_bytes() == payload
+    assert sorted(
+        str(path.relative_to(root)).replace("\\", "/") for path in root.rglob("*") if path.is_file()
+    ) == [f"sources/{key}/video.info.json", f"sources/{key}/video.mp4"]
+
+
+def test_metadata_only_archive_has_clear_recovery_error(tmp_path):
+    from zipfile import ZipFile
+
+    archive = tmp_path / "later.zip"
+    with ZipFile(archive, "w") as bundle:
+        bundle.writestr("results.csv", "header\n")
+    with pytest.raises(ValueError, match="FIRST"):
+        restore_source_archive(archive, tmp_path / "work", "abcdefghijk")
+
+
+def test_restore_checksum_failure_does_not_commit_video(tmp_path, monkeypatch):
+    from zipfile import ZipFile
+
+    key = "abcdefghijk"
+    archive = tmp_path / "bad.zip"
+    with ZipFile(archive, "w") as bundle:
+        bundle.writestr(f"sources/{key}/video.info.json", json.dumps({"id": key}))
+        bundle.writestr(f"sources/{key}/video.mp4", b"corrupt")
+        bundle.writestr(
+            "jobs/demo/manifest.json", json.dumps({"video_id": key, "source_sha256": "0" * 64})
+        )
+    with pytest.raises(ValueError, match="checksum"):
+        restore_source_archive(archive, tmp_path / "work", key)
+    assert not list((tmp_path / "work").rglob("*.mp4"))
+    assert not list((tmp_path / "work").rglob("*.part"))

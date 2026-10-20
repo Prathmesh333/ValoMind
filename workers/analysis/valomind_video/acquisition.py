@@ -132,3 +132,72 @@ def cached_video(folder, key):
     except (OSError, ValueError, KeyError, subprocess.SubprocessError):
         return None
     return None
+
+
+def restore_source_archive(archive_path, root, key):
+    """Restore only the selected prior source video and metadata, never arbitrary ZIP paths."""
+    if not re.fullmatch(r"[A-Za-z0-9_-]{11}", key):
+        raise ValueError("Invalid source video ID")
+    folder = Path(root) / "sources" / key
+    existing = cached_video(folder, key)
+    if existing:
+        return existing
+    prefix = f"sources/{key}/"
+    with ZipFile(archive_path) as archive:
+        names = set(archive.namelist())
+        info_name = prefix + "video.info.json"
+        video_name = next(
+            (
+                prefix + "video" + suffix
+                for suffix in [".mp4", ".webm", ".mkv"]
+                if prefix + "video" + suffix in names
+            ),
+            None,
+        )
+        if not video_name or info_name not in names:
+            raise ValueError(
+                "This archive has no full source video. Use the FIRST valomind_results.zip, not the later metadata-only exports."
+            )
+        if archive.getinfo(info_name).file_size > 5_000_000:
+            raise ValueError("Source metadata is unexpectedly large")
+        metadata_bytes = archive.read(info_name)
+        metadata = json.loads(metadata_bytes)
+        if metadata.get("id") != key:
+            raise ValueError("Archive metadata does not match the requested YouTube video")
+        expected = set()
+        for name in names:
+            if name.startswith("jobs/") and name.endswith("/manifest.json"):
+                if archive.getinfo(name).file_size > 1_000_000:
+                    raise ValueError("Unexpectedly large job manifest")
+                manifest = json.loads(archive.read(name))
+                digest = manifest.get("source_sha256", "")
+                if manifest.get("video_id") == key and re.fullmatch(r"[a-f0-9]{64}", digest):
+                    expected.add(digest)
+        folder.mkdir(parents=True, exist_ok=True)
+        destination = folder / Path(video_name).name
+        temporary = folder / (destination.name + ".restore.part")
+        digest = hashlib.sha256()
+        try:
+            with archive.open(video_name) as source, temporary.open("wb") as output:
+                for chunk in iter(lambda: source.read(4 * 1024 * 1024), b""):
+                    digest.update(chunk)
+                    output.write(chunk)
+            if temporary.stat().st_size == 0 or (expected and digest.hexdigest() not in expected):
+                raise ValueError("Restored source checksum does not match the archived job")
+            temporary.replace(destination)
+            info = folder / "video.info.json"
+            info_temp = folder / "video.info.json.restore.part"
+            info_temp.write_bytes(metadata_bytes)
+            info_temp.replace(info)
+        finally:
+            if temporary.exists():
+                temporary.unlink()
+    restored = cached_video(folder, key)
+    if not restored:
+        raise ValueError(
+            "Restored video failed ffprobe validation; check ffmpeg/ffprobe setup and archive completeness"
+        )
+    print(
+        "Restored prior source into the cloud cache; YouTube access is not needed for this video."
+    )
+    return restored

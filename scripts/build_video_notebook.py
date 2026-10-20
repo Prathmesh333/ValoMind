@@ -59,7 +59,8 @@ for name in list(sys.modules):
         del sys.modules[name]
 from valomind_video.pipeline import channel_videos, download, process, merge
 from valomind_video.roster import export_rosters
-from valomind_video.acquisition import ensure_runtime
+from valomind_video.acquisition import ensure_runtime, restore_source_archive
+from valomind_video.pipeline import video_id
 from prepare_portrait_dataset import prepare as prepare_classifier_dataset
 from evaluate_segment_review import evaluate as evaluate_segments
 JS_RUNTIME = ensure_runtime()
@@ -102,6 +103,30 @@ if '/@' in SOURCE_URL:
     SELECTED_URLS = []  # Paste selected candidate URLs here, then run the extraction cell.
 else:
     SELECTED_URLS = [SOURCE_URL]
+""",
+)
+cell(
+    "markdown",
+    """## Recover this existing video if YouTube blocks Colab
+The FIRST valomind_results.zip contains the full previously downloaded video.
+Later numbered exports contain metadata only. Put that first ZIP in your private
+Google Drive, set SOURCE_ARCHIVE below, and mount Drive when requested. Restoring
+copies only the selected source video/metadata and verifies its archived checksum
+and duration. Processing remains on the cloud GPU; no new YouTube request is used.
+This recovery applies to the existing video, not new blocked YouTube links.
+""",
+)
+cell(
+    "code",
+    """SOURCE_ARCHIVE = None  # e.g. '/content/drive/MyDrive/valomind_results.zip'
+if SOURCE_ARCHIVE:
+    if str(SOURCE_ARCHIVE).startswith('/content/drive/'):
+        from google.colab import drive
+        drive.mount('/content/drive')
+    if not SELECTED_URLS:
+        raise ValueError('Select the source video URL before restoring its archive.')
+    for url in SELECTED_URLS:
+        print(restore_source_archive(SOURCE_ARCHIVE, WORK_ROOT, video_id(url)))
 """,
 )
 cell(

@@ -1,5 +1,11 @@
 # Colab / Kaggle video jobs
 
+Persistent YouTube verification on this existing video: set SOURCE_ARCHIVE in the
+new recovery cell to the FIRST results ZIP in your private cloud storage. It
+restores only the original source video/metadata into cache and validates its hash
+and duration. Later numbered metadata-only results ZIPs cannot restore footage.
+Cloud processing then reuses this prior copy without another YouTube request.
+
 YouTube setup now checks/installs a supported JS runtime and passes it explicitly
 to yt-dlp. This addresses the missing-runtime warning; a YouTube sign-in/bot check
 can remain. Completed cloud video caches are reused without a new network request.

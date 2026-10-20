@@ -1,5 +1,19 @@
 # YouTube acquisition setup and sign-in failures
 
+If sign-in verification persists after the JS warning disappears, use the first
+results archive for this already downloaded video. The first local
+results/valomind_results.zip contains sources/omjZXmc7_4A/video.mp4 and matching
+metadata; later numbered exports deliberately omit the video. Put the first ZIP
+in your private Drive, open the latest notebook, and set SOURCE_ARCHIVE in the new
+recovery cell to /content/drive/MyDrive/valomind_results.zip. Drive mounting asks
+for your consent in Colab; this chat does not upload or access your Drive.
+
+Recovery reads only the selected source video and metadata, verifies the archived
+job checksum when present, and requires ffprobe duration validation. No arbitrary
+ZIP paths are extracted. Once cached, processing uses that copy without contacting
+YouTube. This resolves reuse of this source; it is not a fix for acquisition of a
+new blocked video and does not bypass YouTube's verification.
+
 The reported failure contains two independent conditions: no supported JavaScript
 runtime, then YouTube asking for sign-in/bot verification. The notebook now updates
 yt-dlp's default dependencies, checks Deno >=2.3 or Node >=22, and installs the

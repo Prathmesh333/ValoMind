@@ -1,0 +1,186 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE TABLE organizations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE users (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  external_auth_subject text UNIQUE,
+  display_name text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE memberships (
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role text NOT NULL CHECK(role IN ('owner','coach','analyst','viewer')),
+  PRIMARY KEY(organization_id,user_id)
+);
+CREATE TABLE consents (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  subject_player_id uuid,
+  rights_basis text NOT NULL CHECK(rights_basis IN ('owned','consented','licensed','synthetic')),
+  permitted_use text NOT NULL CHECK(permitted_use IN ('private_coaching','research_demo')),
+  rights_reference text,
+  status text NOT NULL CHECK(status IN ('active','pending','revoked','expired')),
+  expires_at timestamptz,
+  revoked_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE players (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  display_name text NOT NULL,
+  is_synthetic boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(id, organization_id)
+);
+ALTER TABLE consents ADD CONSTRAINT consent_subject_fk FOREIGN KEY(subject_player_id) REFERENCES players(id) ON DELETE CASCADE;
+CREATE TABLE assets (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  consent_id uuid NOT NULL REFERENCES consents(id),
+  uploaded_by uuid NOT NULL REFERENCES users(id),
+  storage_key text NOT NULL UNIQUE,
+  filename text NOT NULL,
+  media_type text NOT NULL CHECK(media_type IN ('video/mp4','video/webm','application/json')),
+  byte_size bigint NOT NULL CHECK(byte_size >= 0),
+  sha256 char(64),
+  duration_ms bigint CHECK(duration_ms > 0),
+  state text NOT NULL DEFAULT 'created' CHECK(state IN ('created','uploading','uploaded','processing','needs_review','ready','failed','rejected','deleted')),
+  is_synthetic boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(id, organization_id)
+);
+CREATE INDEX ix_assets_org_state ON assets (organization_id, state);
+CREATE TABLE matches (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  asset_id uuid NOT NULL,
+  map_id text,
+  patch_id text,
+  started_at timestamptz,
+  is_synthetic boolean NOT NULL DEFAULT false,
+  FOREIGN KEY (asset_id, organization_id) REFERENCES assets(id, organization_id) ON DELETE CASCADE,
+  UNIQUE(id, organization_id)
+);
+CREATE TABLE match_players (
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  match_id uuid NOT NULL,
+  player_id uuid NOT NULL,
+  team_id text NOT NULL,
+  character_agent_id text,
+  character_role text,
+  PRIMARY KEY(match_id, player_id),
+  FOREIGN KEY (match_id, organization_id) REFERENCES matches(id, organization_id) ON DELETE CASCADE,
+  FOREIGN KEY (player_id, organization_id) REFERENCES players(id, organization_id) ON DELETE CASCADE
+);
+CREATE TABLE rounds (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  match_id uuid NOT NULL,
+  round_number int NOT NULL CHECK(round_number > 0),
+  start_ms bigint NOT NULL CHECK(start_ms >= 0),
+  end_ms bigint NOT NULL CHECK(end_ms > start_ms),
+  side text CHECK(side IN ('attack','defense','unknown')),
+  FOREIGN KEY (match_id,organization_id) REFERENCES matches(id,organization_id) ON DELETE CASCADE,
+  UNIQUE (match_id,round_number),
+  UNIQUE (id,organization_id)
+);
+CREATE TABLE annotations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  round_id uuid NOT NULL,
+  version int NOT NULL DEFAULT 1 CHECK(version >= 1),
+  author_id uuid NOT NULL REFERENCES users(id),
+  reviewer_id uuid REFERENCES users(id),
+  review_status text NOT NULL CHECK(review_status IN ('draft','proposed','reviewed','rejected')),
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  FOREIGN KEY (round_id,organization_id) REFERENCES rounds(id,organization_id) ON DELETE CASCADE,
+  UNIQUE (id,organization_id)
+);
+CREATE TABLE events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  round_id uuid NOT NULL,
+  player_id uuid NOT NULL,
+  annotation_id uuid NOT NULL,
+  observed_at_ms bigint NOT NULL CHECK(observed_at_ms >= 0),
+  event_type text NOT NULL,
+  context jsonb NOT NULL DEFAULT '{}'::jsonb,
+  properties jsonb NOT NULL DEFAULT '{}'::jsonb,
+  quality jsonb NOT NULL DEFAULT '{}'::jsonb,
+  schema_version text NOT NULL,
+  verified boolean NOT NULL DEFAULT false,
+  is_synthetic boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  FOREIGN KEY (round_id,organization_id) REFERENCES rounds(id,organization_id) ON DELETE CASCADE,
+  FOREIGN KEY (player_id,organization_id) REFERENCES players(id,organization_id) ON DELETE CASCADE,
+  FOREIGN KEY (annotation_id,organization_id) REFERENCES annotations(id,organization_id) ON DELETE CASCADE
+);
+CREATE INDEX ix_events_scope_lookup ON events(organization_id,player_id,event_type,observed_at_ms);
+CREATE TABLE feature_sets (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  player_id uuid NOT NULL,
+  recipe_version text NOT NULL,
+  cohort jsonb NOT NULL,
+  features jsonb NOT NULL,
+  masks jsonb NOT NULL,
+  opportunities jsonb NOT NULL,
+  status text NOT NULL CHECK(status IN ('pending','generating','ready','insufficient_data','invalidated')),
+  source_fingerprint text NOT NULL,
+  is_synthetic boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  FOREIGN KEY(player_id,organization_id) REFERENCES players(id,organization_id) ON DELETE CASCADE
+);
+CREATE INDEX ix_feature_player ON feature_sets (organization_id,player_id,recipe_version);
+CREATE TABLE style_models (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  feature_recipe text NOT NULL,
+  algorithm text NOT NULL,
+  version text NOT NULL,
+  metrics jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(id,organization_id)
+);
+CREATE TABLE style_assignments (
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  player_id uuid NOT NULL,
+  style_model_id uuid NOT NULL,
+  cluster_id text,
+  affinities jsonb NOT NULL DEFAULT '{}'::jsonb,
+  uncertainty jsonb NOT NULL DEFAULT '{}'::jsonb,
+  PRIMARY KEY(player_id,style_model_id),
+  FOREIGN KEY(player_id,organization_id) REFERENCES players(id,organization_id) ON DELETE CASCADE,
+  FOREIGN KEY(style_model_id,organization_id) REFERENCES style_models(id,organization_id) ON DELETE CASCADE
+);
+CREATE TABLE jobs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  kind text NOT NULL,
+  idempotency_key text NOT NULL,
+  state text NOT NULL CHECK(state IN ('queued','running','complete','failed','canceled')),
+  attempt_count int NOT NULL DEFAULT 0,
+  error_code text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(organization_id,kind,idempotency_key)
+);
+CREATE TABLE audit_log (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  actor_id uuid REFERENCES users(id),
+  action text NOT NULL,
+  entity_kind text NOT NULL,
+  entity_id uuid,
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+  happened_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE consents ADD CONSTRAINT consent_org_unique UNIQUE(id, organization_id);
+ALTER TABLE assets ADD CONSTRAINT asset_consent_org_fk FOREIGN KEY(consent_id, organization_id) REFERENCES consents(id, organization_id);
+ALTER TABLE consents ADD CONSTRAINT consent_player_org_fk FOREIGN KEY(subject_player_id, organization_id) REFERENCES players(id, organization_id) ON DELETE CASCADE;
+ALTER TABLE events ADD CONSTRAINT event_schema_nonempty CHECK(length(schema_version) > 0);

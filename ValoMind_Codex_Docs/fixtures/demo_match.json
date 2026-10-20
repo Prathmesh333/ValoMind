@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0",
+  "id": "match_synthetic_001",
+  "is_synthetic": true,
+  "map_id": "ascent",
+  "patch_id": "synthetic-1",
+  "note": "Invented players and statistics for feature/model tests, NOT an actual VALORANT match.",
+  "players": [
+    {
+      "id": "p_alpha",
+      "name": "Synth Alpha",
+      "character_agent": "jett",
+      "character_role": "Duelist",
+      "context": "synthetic attack openings",
+      "is_synthetic": true
+    },
+    {
+      "id": "p_beta",
+      "name": "Synth Beta",
+      "character_agent": "cypher",
+      "character_role": "Sentinel",
+      "context": "synthetic comparable opportunities",
+      "is_synthetic": true
+    },
+    {
+      "id": "p_gamma",
+      "name": "Synth Gamma",
+      "character_agent": "jett",
+      "character_role": "Duelist",
+      "context": "synthetic attack openings",
+      "is_synthetic": true
+    }
+  ],
+  "team_composition": {
+    "team_blue": [
+      "jett",
+      "omen",
+      "sova",
+      "killjoy",
+      "kayo"
+    ],
+    "team_red": [
+      "cypher",
+      "brimstone",
+      "raze",
+      "fade",
+      "sage"
+    ]
+  },
+  "rounds": [
+    {
+      "round_number": 1,
+      "side": "attack",
+      "start_ms": 40000,
+      "end_ms": 70000
+    },
+    {
+      "round_number": 2,
+      "side": "attack",
+      "start_ms": 80000,
+      "end_ms": 110000
+    },
+    {
+      "round_number": 3,
+      "side": "attack",
+      "start_ms": 120000,
+      "end_ms": 150000
+    },
+    {
+      "round_number": 4,
+      "side": "defense",
+      "start_ms": 160000,
+      "end_ms": 190000
+    },
+    {
+      "round_number": 5,
+      "side": "defense",
+      "start_ms": 200000,
+      "end_ms": 230000
+    }
+  ]
+}

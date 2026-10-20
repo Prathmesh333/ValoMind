@@ -1,0 +1,231 @@
+[
+  {
+    "timestamp_ms": "10010",
+    "items": [
+      {
+        "text": "CURRENT: SPLIT",
+        "confidence": 0.933946380153132
+      },
+      {
+        "text": "NEXT: SUMMIT",
+        "confidence": 0.9207877672117037
+      },
+      {
+        "text": "NEXT: LOTUS",
+        "confidence": 0.9937785891660246
+      },
+      {
+        "text": "RouNd 1",
+        "confidence": 0.20601820673961976
+      },
+      {
+        "text": "CHAMPIONS SHANGHAI | LOWER FINAL",
+        "confidence": 0.7528929568049965
+      },
+      {
+        "text": "I0OT",
+        "confidence": 0.4279482960700989
+      },
+      {
+        "text": "0",
+        "confidence": 0.9996898414818958
+      },
+      {
+        "text": "0",
+        "confidence": 0.9999605421143976
+      },
+      {
+        "text": "AMER #1",
+        "confidence": 0.9434359906535554
+      },
+      {
+        "text": "0:15",
+        "confidence": 0.6736024022102356
+      },
+      {
+        "text": "EMEA #4",
+        "confidence": 0.8333787315595427
+      },
+      {
+        "text": "yerizon",
+        "confidence": 0.9799545887941301
+      },
+      {
+        "text": "VIt",
+        "confidence": 0.33774620413922657
+      }
+    ],
+    "expected": "gameplay"
+  },
+  {
+    "timestamp_ms": "20020",
+    "items": [
+      {
+        "text": "CURRENT: SPLIT",
+        "confidence": 0.804046783879313
+      },
+      {
+        "text": "NEXT: SUMMIT",
+        "confidence": 0.5199929777352986
+      },
+      {
+        "text": "NEXT: LOTUS",
+        "confidence": 0.996333181008987
+      },
+      {
+        "text": "RoUnd 1",
+        "confidence": 0.28381371837588626
+      },
+      {
+        "text": "CHAMPIONS SHANGHAI",
+        "confidence": 0.9973761237269361
+      },
+      {
+        "text": "LOWER FINAL",
+        "confidence": 0.7272507078463133
+      },
+      {
+        "text": "I0OT",
+        "confidence": 0.4573783874511719
+      },
+      {
+        "text": "0",
+        "confidence": 0.9999663832628727
+      },
+      {
+        "text": "VIT",
+        "confidence": 0.1518847793340683
+      },
+      {
+        "text": "AMER #1",
+        "confidence": 0.9914741227258795
+      },
+      {
+        "text": "0:05",
+        "confidence": 0.6054571866989136
+      },
+      {
+        "text": "EMEA #4",
+        "confidence": 0.7319372585874065
+      },
+      {
+        "text": "",
+        "confidence": 0.0
+      }
+    ],
+    "expected": "gameplay"
+  },
+  {
+    "timestamp_ms": "30030",
+    "items": [
+      {
+        "text": "CURRENT: SPLIT",
+        "confidence": 0.7707558197707493
+      },
+      {
+        "text": "NEXT: SUMMIT",
+        "confidence": 0.5830376592850467
+      },
+      {
+        "text": "NEXT: LOTUS",
+        "confidence": 0.9986183171871439
+      },
+      {
+        "text": "RoUnD 1",
+        "confidence": 0.28201185452265737
+      },
+      {
+        "text": "CHAMPIONS SHANGHAI | LOWER FINAL",
+        "confidence": 0.7725303015848624
+      },
+      {
+        "text": "I0OT",
+        "confidence": 0.6112473607063293
+      },
+      {
+        "text": "0",
+        "confidence": 0.9961914393349822
+      },
+      {
+        "text": "VIT",
+        "confidence": 0.6211195588111877
+      },
+      {
+        "text": "AMER #1",
+        "confidence": 0.9764998306536389
+      },
+      {
+        "text": "1.35",
+        "confidence": 0.901851236820221
+      },
+      {
+        "text": "EMEA #4",
+        "confidence": 0.9667994667326656
+      },
+      {
+        "text": "ONEPLUS",
+        "confidence": 0.9796623485192075
+      }
+    ],
+    "expected": "gameplay"
+  },
+  {
+    "timestamp_ms": "40040",
+    "items": [
+      {
+        "text": "CURRENT: SPLIT",
+        "confidence": 0.978321085079063
+      },
+      {
+        "text": "NEXT: SUMMIT",
+        "confidence": 0.8695650706600665
+      },
+      {
+        "text": "NEXT: LOTUS",
+        "confidence": 0.8284255407773801
+      },
+      {
+        "text": "Round 1",
+        "confidence": 0.5611062650251415
+      },
+      {
+        "text": "CHAMPIONS SHANGHAI",
+        "confidence": 0.9941410805479902
+      },
+      {
+        "text": "LOWER FINAL",
+        "confidence": 0.8887750174108412
+      },
+      {
+        "text": "I0OT",
+        "confidence": 0.5164788961410522
+      },
+      {
+        "text": "VIT",
+        "confidence": 0.3506831538915695
+      },
+      {
+        "text": "AMER #1",
+        "confidence": 0.9900215974767981
+      },
+      {
+        "text": "1.25",
+        "confidence": 0.5180169078569647
+      },
+      {
+        "text": "EMEA #4",
+        "confidence": 0.6495471275673386
+      },
+      {
+        "text": "coinbase",
+        "confidence": 0.99993097663028
+      }
+    ],
+    "expected": "gameplay"
+  },
+  {
+    "timestamp_ms": "60060",
+    "items": [],
+    "expected": "uncertain"
+  }
+]

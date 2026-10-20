@@ -1,0 +1,59 @@
+{
+  "schema_version": "1.0",
+  "is_synthetic": true,
+  "source": "synthetic_json",
+  "asset_id": "asset_synthetic_no_video",
+  "annotation_quality": "fixture_verified_for_testing_only",
+  "feature_recipe_version": "style_v1",
+  "players": [
+    {
+      "player_id": "p_alpha",
+      "character_role": "Duelist",
+      "values": {
+        "first_contact_propensity": 0.74,
+        "disengagement_rate": 0.19,
+        "early_map_space_attempt_rate": 0.78,
+        "trade_attempt_propensity": 0.42
+      },
+      "opportunities": {
+        "first_contact_propensity": 50,
+        "disengagement_rate": 40,
+        "early_map_space_attempt_rate": 50,
+        "trade_attempt_propensity": 40
+      }
+    },
+    {
+      "player_id": "p_beta",
+      "character_role": "Sentinel",
+      "values": {
+        "first_contact_propensity": 0.72,
+        "disengagement_rate": 0.23,
+        "early_map_space_attempt_rate": 0.74,
+        "trade_attempt_propensity": 0.44
+      },
+      "opportunities": {
+        "first_contact_propensity": 50,
+        "disengagement_rate": 40,
+        "early_map_space_attempt_rate": 50,
+        "trade_attempt_propensity": 40
+      }
+    },
+    {
+      "player_id": "p_gamma",
+      "character_role": "Duelist",
+      "values": {
+        "first_contact_propensity": 0.18,
+        "disengagement_rate": 0.81,
+        "early_map_space_attempt_rate": 0.22,
+        "trade_attempt_propensity": 0.19
+      },
+      "opportunities": {
+        "first_contact_propensity": 50,
+        "disengagement_rate": 40,
+        "early_map_space_attempt_rate": 50,
+        "trade_attempt_propensity": 40
+      }
+    }
+  ],
+  "context_match": "For synthetic invariance tests, all values assume common eligible comparable state strata. Do not claim actual observed pro footage."
+}

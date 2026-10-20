@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.env
+*.db
+node_modules/
+.next/
+storage/
+*.pt
+*.mp4
+*.webm
+*.mkv
+*.sqlite
+valomind_results.zip
+results/

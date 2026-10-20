@@ -1,0 +1,21 @@
+# 15 — Shared Glossary
+
+- **Human player** — a person playing VALORANT, with an identity or consented pseudonym in the platform.
+- **Character agent / playable agent** — a VALORANT selectable character (such as Jett) with specific abilities and official role.
+- **Character role** — Duelist, Controller, Initiator, Sentinel; not an inherent description of the human's style.
+- **AI software agent** — ValoMind service capable of invoking tools, such as CoachAI; not a selectable game character.
+- **Player twin / ValoTwin** — a data-backed model of observable patterns for one human player, not a representation of thoughts.
+- **Playstyle category / cluster** — behaviorally derived grouping of humans with support, uncertainty and optional multi-label membership.
+- **Role-normalized style** — behavior contrasted with relevant contextual baselines so cross-role style can be compared when evidence overlaps.
+- **Team/character composition** — which five selectable VALORANT characters were used by a team in a match/round, and which people played them.
+- **Team chemistry / synergy** — statistically described patterns of coordinated observable actions; not assumed causal benefit.
+- **Opportunity** — a situation in which the action under study could reasonably have occurred and was observable.
+- **Coverage** — amount and diversity of verified opportunities and features in available data.
+- **Shared support / overlap** — comparable observed conditions available to both human players.
+- **Not comparable** — results withheld because samples, coverage or context overlap insufficient.
+- **Evidence** — rights-cleared clip plus reviewed annotation/canonical event and timestamp.
+- **Observation** — fact directly visible in authorized source; source quality governs reliability.
+- **Inference** — bounded conclusion about tendency from aggregate observations; never guaranteed internal intent.
+- **Simulation** — an approximate offline model of possible actions/outcomes under assumptions, not the VALORANT game engine.
+- **RSO** — Riot Sign On authentication/consent mechanism for Riot-linked player data.
+- **Synthetic fixture** — invented data solely for demonstration and tests, explicitly labeled.

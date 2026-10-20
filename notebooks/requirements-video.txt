@@ -1,0 +1,5 @@
+# Install in Colab/Kaggle only; save pip freeze with every run.
+yt-dlp[default]>=2026.1
+opencv-python-headless>=4.10,<5
+easyocr>=1.7,<2
+ultralytics>=8.3,<9

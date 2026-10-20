@@ -1,0 +1,215 @@
+openapi: 3.1.0
+info:
+  title: ValoMind Private Coaching API (starter contract)
+  version: 0.1.0
+  description: >-
+    Design-time subset of the planned API. Routes may be implemented milestone by milestone.
+    No actual Riot/GRID client is implied. Response scores represent synthetic or verified offline data only.
+servers:
+  - url: http://localhost:8000/api/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: Health
+  - name: Players
+  - name: Assets
+  - name: Style
+  - name: Coach
+paths:
+  /health:
+    get:
+      tags: [Health]
+      security: []
+      operationId: getHealth
+      responses:
+        '200':
+          description: API alive
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, enum: [ok] }
+  /players:
+    get:
+      tags: [Players]
+      operationId: listPlayers
+      parameters:
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+      responses:
+        '200':
+          description: Players visible to user in current organization
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Player' } }
+                  meta: { type: object, additionalProperties: true }
+  /assets:
+    post:
+      tags: [Assets]
+      operationId: createAsset
+      description: Register authorized private media upload; asset bytes are transferred separately.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssetRegistration' }
+      responses:
+        '201':
+          description: Asset registered with upload instructions
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AssetRegistrationResponse' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /players/{playerId}/profile:
+    get:
+      tags: [Players]
+      operationId: getPlayerProfile
+      parameters:
+        - { name: playerId, in: path, required: true, schema: { type: string } }
+        - { name: map_id, in: query, schema: { type: string } }
+        - { name: patch_id, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Last computed versioned player profile, or insufficient-data state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlayerProfile' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /style/compare:
+    post:
+      tags: [Style]
+      operationId: compareStyles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StyleCompareRequest' }
+      responses:
+        '200':
+          description: Result or explicit coverage-based abstention
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StyleCompareResult' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /coach/questions:
+    post:
+      tags: [Coach]
+      operationId: askCoach
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CoachQuestion' }
+      responses:
+        '200':
+          description: Evidence-grounded answer (may abstain)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CoachAnswer' }
+        '403': { $ref: '#/components/responses/Problem' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Problem:
+      description: Structured error; no leak of private entity existence
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Problem:
+      type: object
+      required: [title, status, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        code: { type: string }
+        request_id: { type: string }
+    Player:
+      type: object
+      required: [id, display_name, is_synthetic]
+      properties:
+        id: { type: string }
+        display_name: { type: string }
+        is_synthetic: { type: boolean }
+    AssetRegistration:
+      type: object
+      required: [filename, content_type, byte_size, rights_basis, permitted_use]
+      properties:
+        filename: { type: string, maxLength: 255 }
+        content_type: { type: string, enum: [video/mp4, video/webm] }
+        byte_size: { type: integer, minimum: 1 }
+        rights_basis: { type: string, enum: [owned, consented, licensed, synthetic] }
+        rights_reference: { type: string, maxLength: 500 }
+        permitted_use: { type: string, enum: [private_coaching, research_demo] }
+        is_synthetic: { type: boolean, default: false }
+    AssetRegistrationResponse:
+      type: object
+      required: [id, state]
+      properties:
+        id: { type: string }
+        state: { type: string, enum: [created] }
+        upload_url: { type: string, format: uri, description: Optional signed URL, never publicly reusable }
+    PlayerProfile:
+      type: object
+      required: [player_id, status, is_synthetic]
+      properties:
+        player_id: { type: string }
+        status: { type: string, enum: [ready, insufficient_data, pending, invalidated] }
+        feature_recipe: { type: string }
+        features: { type: object, additionalProperties: { type: [number, 'null'] } }
+        coverage: { type: object, additionalProperties: true }
+        limitations: { type: array, items: { type: string } }
+        is_synthetic: { type: boolean }
+    StyleCompareRequest:
+      type: object
+      required: [player_a_id, player_b_id, mode]
+      properties:
+        player_a_id: { type: string }
+        player_b_id: { type: string }
+        mode: { type: string, enum: [role_normalized, context_matched, role_composition_breakdown] }
+        min_opportunities: { type: integer, minimum: 1, default: 20 }
+        require_shared_context: { type: boolean, default: true }
+        filters: { type: object, additionalProperties: true }
+    StyleCompareResult:
+      type: object
+      required: [status, calibrated, coverage]
+      properties:
+        status: { type: string, enum: [comparable, limited_overlap, not_comparable, insufficient_data, stale_model] }
+        mode: { type: string }
+        distance: { type: [number, 'null'], minimum: 0 }
+        similarity_score: { type: [number, 'null'] }
+        calibrated: { type: boolean }
+        coverage: { type: object, additionalProperties: true }
+        top_shared_dimensions: { type: array, items: { type: object, additionalProperties: true } }
+        key_differences: { type: array, items: { type: object, additionalProperties: true } }
+        warnings: { type: array, items: { type: string } }
+        model_version: { type: string }
+    CoachQuestion:
+      type: object
+      required: [question]
+      properties:
+        question: { type: string, minLength: 3, maxLength: 3000 }
+        player_id: { type: string }
+        filters: { type: object, additionalProperties: true }
+    CoachAnswer:
+      type: object
+      required: [answer, abstained, citations, is_synthetic]
+      properties:
+        answer: { type: string }
+        abstained: { type: boolean }
+        claims: { type: array, items: { type: object, additionalProperties: true } }
+        citations: { type: array, items: { type: object, additionalProperties: true } }
+        limitations: { type: array, items: { type: string } }
+        is_synthetic: { type: boolean }

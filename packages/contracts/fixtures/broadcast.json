@@ -1,0 +1,81 @@
+{
+  "schema_version": "broadcast_v1",
+  "source_id": "00000000-0000-0000-0000-00000000001e",
+  "source_url": "synthetic://broadcast/demo",
+  "source_channel": "Synthetic broadcast fixture",
+  "duration_ms": 120000,
+  "is_synthetic": true,
+  "footage_use_status": "unconfirmed",
+  "players": [
+    {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "display_name": "Synth Alpha"
+    }
+  ],
+  "teams": [
+    {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "display_name": "Synthetic Blue"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000003",
+      "display_name": "Synthetic Red"
+    }
+  ],
+  "map_games": [
+    {
+      "id": "00000000-0000-0000-0000-000000000004",
+      "series_id": "00000000-0000-0000-0000-00000000000a",
+      "map_id": "synthetic_map_4",
+      "team_ids": [
+        "00000000-0000-0000-0000-000000000002",
+        "00000000-0000-0000-0000-000000000003"
+      ],
+      "start_ms": 0,
+      "end_ms": 60000,
+      "picks": [
+        {
+          "player_id": "00000000-0000-0000-0000-000000000001",
+          "team_id": "00000000-0000-0000-0000-000000000002",
+          "character_agent_id": "jett",
+          "evidence": {
+            "start_ms": 1000,
+            "end_ms": 2000,
+            "method": "manual",
+            "confidence": 1.0,
+            "status": "reviewed",
+            "author_id": "00000000-0000-0000-0000-000000000014",
+            "reviewer_id": "00000000-0000-0000-0000-000000000015"
+          }
+        }
+      ]
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000005",
+      "series_id": "00000000-0000-0000-0000-00000000000a",
+      "map_id": "synthetic_map_5",
+      "team_ids": [
+        "00000000-0000-0000-0000-000000000002",
+        "00000000-0000-0000-0000-000000000003"
+      ],
+      "start_ms": 60000,
+      "end_ms": 120000,
+      "picks": [
+        {
+          "player_id": "00000000-0000-0000-0000-000000000001",
+          "team_id": "00000000-0000-0000-0000-000000000002",
+          "character_agent_id": "cypher",
+          "evidence": {
+            "start_ms": 61000,
+            "end_ms": 62000,
+            "method": "manual",
+            "confidence": 1.0,
+            "status": "reviewed",
+            "author_id": "00000000-0000-0000-0000-000000000014",
+            "reviewer_id": "00000000-0000-0000-0000-000000000015"
+          }
+        }
+      ]
+    }
+  ]
+}

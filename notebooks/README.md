@@ -1,5 +1,11 @@
 # Colab / Kaggle video jobs
 
+YouTube setup now checks/installs a supported JS runtime and passes it explicitly
+to yt-dlp. This addresses the missing-runtime warning; a YouTube sign-in/bot check
+can remain. Completed cloud video caches are reused without a new network request.
+Optional COOKIE_FILE must stay outside WORK_ROOT and should never be shared.
+See docs/YOUTUBE_DOWNLOAD_TROUBLESHOOTING.md. No blocked-video download is guaranteed.
+
 video_v5 fixes the observed gate misses: strong map-strip plus central clock/round
 evidence admits gameplay in one sample; weak candidates retain confirmation. Probe
 boxes are saved for spatial checking. The source-specific IQOT team alias recovers

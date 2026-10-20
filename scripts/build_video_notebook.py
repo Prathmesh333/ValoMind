@@ -36,7 +36,7 @@ cell(
     "code",
     """import sys, subprocess, json
 from pathlib import Path
-subprocess.run([sys.executable, '-m', 'pip', 'install', '-q',
+subprocess.run([sys.executable, '-m', 'pip', 'install', '--upgrade', '-q',
     'yt-dlp[default]>=2026.1', 'opencv-python-headless>=4.10,<5',
     'easyocr>=1.7,<2', 'ultralytics>=8.3,<9'], check=True)
 # ffmpeg is required by the downloader for merging video and audio.
@@ -59,8 +59,11 @@ for name in list(sys.modules):
         del sys.modules[name]
 from valomind_video.pipeline import channel_videos, download, process, merge
 from valomind_video.roster import export_rosters
+from valomind_video.acquisition import ensure_runtime
 from prepare_portrait_dataset import prepare as prepare_classifier_dataset
 from evaluate_segment_review import evaluate as evaluate_segments
+JS_RUNTIME = ensure_runtime()
+print('yt-dlp JavaScript runtime:', ', '.join(JS_RUNTIME))
 """,
 )
 cell(
@@ -72,6 +75,7 @@ WORK_ROOT.mkdir(parents=True, exist_ok=True)
 SOURCE_URL = 'https://youtu.be/omjZXmc7_4A'
 CHANNEL_SECTION = 'streams'  # 'videos' for uploads/highlights
 LIST_LIMIT = 5
+COOKIE_FILE = None  # Optional own-session Netscape cookies file outside WORK_ROOT. Never paste it here.
 import torch
 if not torch.cuda.is_available():
     raise RuntimeError('No CUDA GPU assigned. In Colab select Runtime > Change runtime type > T4 GPU, then rerun.')
@@ -91,7 +95,8 @@ frozen = subprocess.check_output([sys.executable, '-m', 'pip', 'freeze'], text=T
 (WORK_ROOT / 'environment.txt').write_text(frozen)
 
 if '/@' in SOURCE_URL:
-    candidates = channel_videos(SOURCE_URL, limit=LIST_LIMIT, section=CHANNEL_SECTION)
+    candidates = channel_videos(SOURCE_URL, limit=LIST_LIMIT, section=CHANNEL_SECTION,
+                               cookie_file=COOKIE_FILE, js_runtime=JS_RUNTIME, export_root=WORK_ROOT)
     for index, item in enumerate(candidates):
         print(index, item['title'], item['url'])
     SELECTED_URLS = []  # Paste selected candidate URLs here, then run the extraction cell.
@@ -131,7 +136,8 @@ for url in SELECTED_URLS:
                      portrait_classifier_weights=PORTRAIT_CLASSIFIER_WEIGHTS,
                      portrait_allowed_classes=PORTRAIT_ALLOWED_CLASSES,
                      allow_proposed_portrait_references=ALLOW_PROPOSED_PORTRAIT_REFERENCES,
-                     review_sample_limit=REVIEW_SAMPLE_LIMIT)
+                     review_sample_limit=REVIEW_SAMPLE_LIMIT,
+                     cookie_file=COOKIE_FILE, js_runtime=JS_RUNTIME)
     outputs.append(output)
     print('Saved', output)
     print('Segment decisions:', output.parent / 'segments.csv')
@@ -187,7 +193,7 @@ cell(
 if MAKE_LABELING_FRAMES:
     import cv2
     url = SELECTED_URLS[0]
-    video = download(url, WORK_ROOT)
+    video = download(url, WORK_ROOT, cookie_file=COOKIE_FILE, js_runtime=JS_RUNTIME)
     folder = WORK_ROOT / 'labeling' / video.parent.name
     folder.mkdir(parents=True, exist_ok=True)
     cap = cv2.VideoCapture(str(video))
@@ -277,6 +283,8 @@ INCLUDE_SOURCE_VIDEO = False
 with ZipFile(archive, 'w', compression=ZIP_DEFLATED) as bundle:
     for path in WORK_ROOT.rglob('*'):
         if not path.is_file():
+            continue
+        if 'cookie' in path.name.lower() or path.name == '.env':
             continue
         if not INCLUDE_SOURCE_VIDEO and path.suffix.lower() in {'.mp4', '.webm', '.mkv'}:
             continue

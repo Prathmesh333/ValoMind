@@ -40,9 +40,14 @@ FIELDS = [
 ]
 
 
-def channel_videos(url, limit=5, section="videos"):
+def channel_videos(
+    url, limit=5, section="videos", cookie_file=None, js_runtime=None, export_root=None
+):
     """List a bounded channel page without downloading media."""
     from yt_dlp import YoutubeDL
+    from yt_dlp.utils import DownloadError
+
+    from .acquisition import download_error_message, youtube_options
 
     parsed = urlparse(url)
     if (
@@ -54,8 +59,17 @@ def channel_videos(url, limit=5, section="videos"):
     if not 1 <= limit <= 50 or section not in {"videos", "streams"}:
         raise ValueError("Limit must be 1–50 and section videos or streams")
     target = f"https://www.youtube.com{parsed.path.rstrip('/')}/{section}"
-    with YoutubeDL({"extract_flat": True, "playlistend": limit, "skip_download": True}) as ydl:
-        listing = ydl.extract_info(target, download=False)
+    options = {
+        "extract_flat": True,
+        "playlistend": limit,
+        "skip_download": True,
+        **youtube_options(cookie_file, js_runtime, export_root),
+    }
+    try:
+        with YoutubeDL(options) as ydl:
+            listing = ydl.extract_info(target, download=False)
+    except DownloadError as error:
+        raise RuntimeError(download_error_message(error)) from None
     return [
         {
             "video_id": item["id"],
@@ -88,36 +102,46 @@ def sha256(path):
     return digest.hexdigest()
 
 
-def download(url, root):
+def download(url, root, cookie_file=None, js_runtime=None):
     """Download a public video into the notebook runtime; do not bypass access restrictions."""
     from yt_dlp import YoutubeDL
+    from yt_dlp.utils import DownloadError
+
+    from .acquisition import cached_video, download_error_message, youtube_options
 
     key = video_id(url)
     folder = Path(root) / "sources" / key
     folder.mkdir(parents=True, exist_ok=True)
-    with YoutubeDL(
-        {
-            "noplaylist": True,
-            "format": "bv*[height<=1080]+ba/b[height<=1080]",
-            "merge_output_format": "mp4",
-            "outtmpl": str(folder / "video.%(ext)s"),
-            "writeinfojson": True,
-            "continuedl": True,
-        }
-    ) as downloader:
-        info = downloader.extract_info(f"https://www.youtube.com/watch?v={key}", download=True)
-        requested = info.get("requested_downloads") or []
-        candidates = [Path(info.get("filepath") or downloader.prepare_filename(info))]
-        candidates += [Path(item["filepath"]) for item in requested if item.get("filepath")]
-        candidates = [
-            folder / "video.mp4",
-            *candidates,
-            folder / "video.webm",
-            folder / "video.mkv",
-        ]
-        for candidate in candidates:
-            if candidate.is_file() and not re.search(r"\.f\d+\.", candidate.name):
-                return candidate
+    existing = cached_video(folder, key)
+    if existing:
+        print("Reusing completed video from cloud cache; no YouTube request needed.")
+        return existing
+    options = {
+        "noplaylist": True,
+        "format": "bv*[height<=1080]+ba/b[height<=1080]",
+        "merge_output_format": "mp4",
+        "outtmpl": str(folder / "video.%(ext)s"),
+        "writeinfojson": True,
+        "continuedl": True,
+        **youtube_options(cookie_file, js_runtime, root),
+    }
+    try:
+        with YoutubeDL(options) as downloader:
+            info = downloader.extract_info(f"https://www.youtube.com/watch?v={key}", download=True)
+            requested = info.get("requested_downloads") or []
+            candidates = [Path(info.get("filepath") or downloader.prepare_filename(info))]
+            candidates += [Path(item["filepath"]) for item in requested if item.get("filepath")]
+            candidates = [
+                folder / "video.mp4",
+                *candidates,
+                folder / "video.webm",
+                folder / "video.mkv",
+            ]
+            for candidate in candidates:
+                if candidate.is_file() and not re.search(r"\.f\d+\.", candidate.name):
+                    return candidate
+    except DownloadError as error:
+        raise RuntimeError(download_error_message(error)) from None
     raise RuntimeError("Download completed without a readable merged video")
 
 
@@ -226,6 +250,8 @@ def process(
     portrait_allowed_classes=None,
     allow_proposed_portrait_references=False,
     review_sample_limit=24,
+    cookie_file=None,
+    js_runtime=None,
 ):
     """OCR bootstrap works without weights; optional YOLO adds custom detector proposals."""
     import cv2
@@ -273,7 +299,11 @@ def process(
         model = YOLO(str(weights))
         if model.task != "detect":
             raise ValueError("Expected object detection weights")
-    source = download(url, root)
+    source = (
+        download(url, root, cookie_file=cookie_file, js_runtime=js_runtime)
+        if cookie_file or js_runtime
+        else download(url, root)
+    )
     key = video_id(url)
     roster_catalog = roster_catalog or SOURCE_CATALOG.get(key)
     import importlib.metadata

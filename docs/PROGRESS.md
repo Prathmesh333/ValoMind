@@ -2,6 +2,13 @@
 
 M0 remains incomplete. No later milestone is marked complete.
 
+Repository published to Prathmesh333/ValoMind on main. GitHub CI run 39404925597
+passed lint, formatting, all 64 tests and PostgreSQL upgrade/downgrade/re-upgrade.
+An initial Actions health-command quoting issue was fixed before that successful
+run. Local Docker remains unavailable; earlier notes about unobserved CI below
+describe the state when those increments were written. Footage, generated results,
+weights and local environment files are excluded from Git.
+
 video_v5: strong spatial compound HUD admission, preserved weak-signal confirmation
 and replay/break precedence; source-scoped IQOT team alias. Saved-text replay now
 admits 55/60 samples, and existing OCR reparses to 320/320 team-bearing roster rows.

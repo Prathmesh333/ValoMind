@@ -65,6 +65,8 @@ uv run pytest -q
 uv run alembic upgrade head --sql
 ```
 
-CI also applies, reverses and reapplies the migration against PostgreSQL. No CI
-run has been observed yet. Docker was unavailable on the implementation machine.
+CI also applies, reverses and reapplies the migration against PostgreSQL. The
+[first successful CI run](https://github.com/Prathmesh333/ValoMind/actions/runs/39404925597)
+passed lint, formatting, all 64 tests and all three migration steps. Docker remains
+unavailable on the local implementation machine.
 See [the training plan](docs/VIDEO_MODEL_PLAN.md) and [current progress](docs/PROGRESS.md).

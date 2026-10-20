@@ -11,7 +11,11 @@ jobs:
           POSTGRES_PASSWORD: ci-test-only
           POSTGRES_DB: valomind
         ports: ['5432:5432']
-        options: --health-cmd 'pg_isready -U valomind' --health-interval 5s --health-timeout 3s --health-retries 10
+        options: >-
+          --health-cmd "pg_isready -U valomind"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
     env:
       DATABASE_URL: postgresql+psycopg://valomind:ci-test-only@localhost:5432/valomind
     steps:

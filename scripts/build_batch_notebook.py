@@ -3,6 +3,8 @@
 import json
 from pathlib import Path
 
+from notebook_bundle import source_dictionary
+
 ROOT = Path(__file__).resolve().parents[1]
 modules = {
     p.name: p.read_text(encoding="utf-8")
@@ -46,7 +48,7 @@ subprocess.run([sys.executable, '-m', 'pip', 'install', '--upgrade', '-q',
 if not shutil.which('ffmpeg') or not shutil.which('ffprobe'):
     raise RuntimeError('This runtime needs ffmpeg and ffprobe.')
 """
-    + f"MODULES = {modules!r}\n"
+    + source_dictionary("MODULES", modules)
     + """package = Path('/tmp/valomind_batch_worker/valomind_video')
 package.mkdir(parents=True, exist_ok=True)
 for name, source in MODULES.items():

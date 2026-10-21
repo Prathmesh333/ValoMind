@@ -136,3 +136,10 @@ Next: finish M0 web application and typed client, fixture seed, frontend tests,
 dependency/secret scans and a real PostgreSQL verification run. Then M1 workspace
 RBAC, permissioned upload, durable jobs, annotation editor and independent review.
 Only then collect the pilot dataset described in VIDEO_MODEL_PLAN.md.
+# Notebook source readability — 21 October 2026
+
+Both video notebooks now embed worker files as multiline Python strings rather than
+one long escaped dictionary line. The generators share the source renderer. Verified
+all 27 bundled file instances match their source files exactly, every notebook code
+cell compiles, Ruff passes, and all 113 local tests pass. Cloud execution was not rerun.
+

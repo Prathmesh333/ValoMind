@@ -3,6 +3,8 @@
 import json
 from pathlib import Path
 
+from notebook_bundle import source_dictionary
+
 ROOT = Path(__file__).resolve().parents[1]
 cells = []
 
@@ -48,8 +50,8 @@ import shutil
 if shutil.which('ffmpeg') is None:
     raise RuntimeError('Install ffmpeg in this runtime before downloading.')
 """
-    + f"modules = {modules!r}\n"
-    + f"helpers = {helpers!r}\n"
+    + source_dictionary("modules", modules)
+    + source_dictionary("helpers", helpers)
     + """package = Path('/tmp/valomind_worker/valomind_video')
 package.mkdir(parents=True, exist_ok=True)
 for name, source in modules.items():

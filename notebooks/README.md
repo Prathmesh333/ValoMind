@@ -121,3 +121,9 @@ queue, not automatic training labels. See [POV and ViT instructions](../docs/POV
 `HISTORICAL_CSV` optionally audits a CSV already available in Kaggle/Drive. See
 [historical VCT dataset review](../docs/HISTORICAL_VCT_DATA_REVIEW.md) for inspected
 sources, double-counting hazards and context/identity requirements.
+
+The notebook also exports `round_context.csv` with conservative HUD phase
+proposals and review-only minimap crops for the inspected broadcast. Known buy or
+pause centers are omitted from POV-window proposals, while roster OCR is retained.
+See [HUD rules and minimap limits](../docs/VALORANT_HUD_RULES.md). No automated
+player-position tracks or fixed attack/defense color mapping are implemented.

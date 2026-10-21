@@ -222,6 +222,9 @@ class Job:
         from .roster import export_rosters
 
         export_rosters(path, catalog=self.identity.get("roster_catalog"))
+        from .context import export_context
+
+        export_context(path, self.folder / "segments.csv", self.folder / "roster_observations.csv")
         if getattr(self, "portrait_matcher", None) is not None:
             from .portraits import classify_rosters
 

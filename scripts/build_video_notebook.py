@@ -171,6 +171,9 @@ for url in SELECTED_URLS:
     print('Saved', output)
     print('Segment decisions:', output.parent / 'segments.csv')
     print('Player/team/map proposals:', output.parent / 'roster_observations.csv')
+    print('HUD phase proposals:', output.parent / 'round_context.csv')
+    from valomind_video.context import export_minimap_review
+    print('Minimap crop review queue:', export_minimap_review(output.parent / 'segments.csv'))
     if PORTRAIT_REFERENCE_CSV or PORTRAIT_CLASSIFIER_WEIGHTS:
         print('Agent proposals:', output.parent / 'roster_with_agents.csv')
     print('Segment review images:', output.parent / 'segment_review')

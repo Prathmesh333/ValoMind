@@ -1,3 +1,18 @@
+# 21 October 2026 — HUD context and private annotation audit
+
+Added round_context.csv with spatial clock/round OCR, explicit phase text and
+roster-layout proposals. Ambiguous clocks stay unknown. POV sampling now omits
+known buy/pause/result centers without discarding roster data. Added source-scoped
+minimap review crops; marker identities, tracks and world positions are not
+implemented. See VALORANT_HUD_RULES.md and ADR-005 for rules and limits.
+
+Local replay of the latest CSVs: 60 context rows, ten buy candidates, 14 active
+candidates, two text-based post-plant proposals and 34 unknown. No accuracy claim.
+Private annotation audit corrected three firing evidence ranges and retained all
+labels as proposed. No independent human review or reaction measurement exists.
+Player records and clips remain outside Git. Validation: 102 local tests with
+optional Pillow, Ruff checks and notebook-cell compilation pass.
+
 # 20 October 2026 — POV evidence and optional frozen ViT
 
 Added bounded native-PTS window extraction, resumable frame evidence manifests,

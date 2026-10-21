@@ -55,10 +55,29 @@ def propose_windows(segments_csv, limit=6, seconds=4.0):
     """Bounded coverage samples, not detected events or confirmed player POVs."""
     if not 1 <= limit <= 20 or not math.isfinite(seconds) or not 0 < seconds <= 8:
         raise ValueError("Use 1–20 windows, each at most eight seconds")
+    context_file = Path(segments_csv).with_name("round_context.csv")
+    excluded = set()
+    if context_file.is_file():
+        excluded = {
+            row["timestamp_ms"]
+            for row in read_table(context_file)
+            if row["phase"]
+            in {
+                "buy_phase",
+                "buy_phase_candidate",
+                "technical_pause",
+                "tactical_timeout",
+                "pause_or_halftime",
+                "round_end_candidate",
+                "replay",
+            }
+        }
     rows = []
     last_end = -1
     for row in read_table(segments_csv):
         if row["segment_type"] != "gameplay" or row["processing_action"] != "extract":
+            continue
+        if row["timestamp_ms"] in excluded:
             continue
         center = float(row["timestamp_ms"]) / 1000
         start = max(0, center - seconds / 2)

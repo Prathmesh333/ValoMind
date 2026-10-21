@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from notebook_bundle import source_dictionary
+from notebook_bundle import source_cells
 
 ROOT = Path(__file__).resolve().parents[1]
 modules = {
@@ -48,12 +48,15 @@ subprocess.run([sys.executable, '-m', 'pip', 'install', '--upgrade', '-q',
 if not shutil.which('ffmpeg') or not shutil.which('ffprobe'):
     raise RuntimeError('This runtime needs ffmpeg and ffprobe.')
 """
-    + source_dictionary("MODULES", modules)
     + """package = Path('/tmp/valomind_batch_worker/valomind_video')
 package.mkdir(parents=True, exist_ok=True)
-for name, source in MODULES.items():
-    (package / name).write_text(source, encoding='utf-8')
-sys.path.insert(0, str(package.parent))
+""",
+)
+source_cells(cell, modules, "/tmp/valomind_batch_worker/valomind_video")
+cell("markdown", "### Initialize worker and runtime\nRun after all worker file cells.\n")
+cell(
+    "code",
+    """sys.path.insert(0, str(package.parent))
 for name in list(sys.modules):
     if name == 'valomind_video' or name.startswith('valomind_video.'):
         del sys.modules[name]
@@ -62,7 +65,8 @@ from valomind_video.batch import run_queue, atomic_json, validate_sources, OFFIC
 from valomind_video.acquisition import ensure_runtime, cached_video, restore_source_archive, youtube_options
 from valomind_video.pov import read_table, write_table
 JS_RUNTIME = ensure_runtime()
-WORKER_HASH = hashlib.sha256(json.dumps(MODULES, sort_keys=True).encode()).hexdigest()
+worker_sources = {p.name: p.read_text(encoding='utf-8') for p in package.glob('*.py')}
+WORKER_HASH = hashlib.sha256(json.dumps(worker_sources, sort_keys=True).encode()).hexdigest()
 import torch
 import importlib.metadata
 if not torch.cuda.is_available():

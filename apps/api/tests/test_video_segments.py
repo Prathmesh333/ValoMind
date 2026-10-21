@@ -202,4 +202,7 @@ def test_notebook_code_cells_parse():
     notebook = json.loads((root / "notebooks/VCT_video_jobs.ipynb").read_text(encoding="utf-8"))
     for cell in notebook["cells"]:
         if cell["cell_type"] == "code":
-            ast.parse("".join(cell["source"]))
+            source = "".join(cell["source"])
+            if source.startswith("%%writefile "):
+                source = source.split("\n", 1)[1]
+            ast.parse(source)

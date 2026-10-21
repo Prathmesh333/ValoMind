@@ -153,4 +153,10 @@ def test_prefilled_batch_has_five_official_unique_archives_and_parseable_cells()
     notebook = json.loads((root / "notebooks/VCT_playoffs_batch.ipynb").read_text(encoding="utf-8"))
     for index, cell in enumerate(notebook["cells"]):
         if cell["cell_type"] == "code":
-            ast.parse("".join(cell["source"]), filename=f"batch_cell_{index}")
+            source = "".join(cell["source"])
+            if source.startswith("%%writefile "):
+                header, source = source.split("\n", 1)
+                filename = header.rsplit("/", 1)[1]
+                expected = root / "workers/analysis/valomind_video" / filename
+                assert source == expected.read_text(encoding="utf-8")
+            ast.parse(source, filename=f"batch_cell_{index}")

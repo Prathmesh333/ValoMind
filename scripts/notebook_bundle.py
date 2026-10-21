@@ -1,17 +1,11 @@
-"""Render embedded Python sources without a single line of escaped file contents."""
+"""Emit notebook file-writing cells with readable Python source."""
 
 
-def source_dictionary(name, sources):
-    """Keep source bytes intact while displaying normal line breaks in notebook cells."""
-    entries = [f"{name} = {{\n"]
+def source_cells(cell, sources, directory):
+    """Write each module in an IPython cell, retaining package-relative imports."""
     for filename, source in sorted(sources.items()):
-        # Raw multiline literals preserve regex escapes and original file contents.
-        # Fall back to repr for sources that contain both possible delimiters.
-        delimiter = next((quote for quote in ("'''", '"""') if quote not in source), None)
-        if delimiter is None or source.endswith("\\"):
-            literal = repr(source)
-        else:
-            literal = f"r{delimiter}{source}{delimiter}"
-        entries.append(f"    {filename!r}: {literal},\n")
-    entries.append("}\n")
-    return "".join(entries)
+        cell(
+            "markdown",
+            f"### Worker file: `{filename}`\nRun this cell to write the file; imports load it during initialization.\n",
+        )
+        cell("code", f"%%writefile {directory}/{filename}\n" + source)

@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from notebook_bundle import source_dictionary
+from notebook_bundle import source_cells
 
 ROOT = Path(__file__).resolve().parents[1]
 cells = []
@@ -50,15 +50,16 @@ import shutil
 if shutil.which('ffmpeg') is None:
     raise RuntimeError('Install ffmpeg in this runtime before downloading.')
 """
-    + source_dictionary("modules", modules)
-    + source_dictionary("helpers", helpers)
     + """package = Path('/tmp/valomind_worker/valomind_video')
 package.mkdir(parents=True, exist_ok=True)
-for name, source in modules.items():
-    (package / name).write_text(source, encoding='utf-8')
-for name, source in helpers.items():
-    (package.parent / name).write_text(source, encoding='utf-8')
-sys.path.insert(0, str(package.parent))
+""",
+)
+source_cells(cell, modules, "/tmp/valomind_worker/valomind_video")
+source_cells(cell, helpers, "/tmp/valomind_worker")
+cell("markdown", "### Initialize worker and runtime\nRun after all worker file cells.\n")
+cell(
+    "code",
+    """sys.path.insert(0, str(package.parent))
 for name in list(sys.modules):
     if name == 'valomind_video' or name.startswith('valomind_video.') or name in {
         'prepare_portrait_dataset', 'evaluate_segment_review', 'audit_historical_vct'}:

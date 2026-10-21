@@ -138,8 +138,9 @@ RBAC, permissioned upload, durable jobs, annotation editor and independent revie
 Only then collect the pilot dataset described in VIDEO_MODEL_PLAN.md.
 # Notebook source readability — 21 October 2026
 
-Both video notebooks now embed worker files as multiline Python strings rather than
-one long escaped dictionary line. The generators share the source renderer. Verified
-all 27 bundled file instances match their source files exactly, every notebook code
-cell compiles, Ruff passes, and all 113 local tests pass. Cloud execution was not rerun.
+Both video notebooks now give each worker file its own labeled `%%writefile` code
+cell, with setup and initialization in separate cells. No module source dictionary
+is displayed. All 27 file cells were executed with IPython in temporary directories
+and matched their source files exactly. Notebook Python bodies compile, Ruff passes,
+and all 113 local tests pass. Full cloud processing was not rerun.
 

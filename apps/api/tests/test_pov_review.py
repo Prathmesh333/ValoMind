@@ -166,4 +166,7 @@ def test_generated_notebook_cells_compile():
     notebook = json.loads((root / "notebooks/VCT_video_jobs.ipynb").read_text())
     for index, cell in enumerate(notebook["cells"]):
         if cell["cell_type"] == "code":
-            compile("".join(cell["source"]), f"cell_{index}", "exec")
+            source = "".join(cell["source"])
+            if source.startswith("%%writefile "):
+                source = source.split("\n", 1)[1]
+            compile(source, f"cell_{index}", "exec")

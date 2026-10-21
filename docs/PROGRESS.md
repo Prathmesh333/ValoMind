@@ -1,5 +1,11 @@
 # 21 October 2026 — HUD context and private annotation audit
 
+Added a source-preserving scene proposal stager and three focused tests. The
+private pilot pack contains 91 original frames with separate scene/perspective
+labels, image checksums, excluded-transition records and unassigned splits. Image
+decode/checksum validation passed. No independent review, model training or
+evaluation split is claimed. See SCENE_DATASET_PREPARATION.md.
+
 Added round_context.csv with spatial clock/round OCR, explicit phase text and
 roster-layout proposals. Ambiguous clocks stay unknown. POV sampling now omits
 known buy/pause/result centers without discarding roster data. Added source-scoped

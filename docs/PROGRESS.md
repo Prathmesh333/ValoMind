@@ -1,5 +1,15 @@
 # 21 October 2026 — HUD context and private annotation audit
 
+Added a standalone five-broadcast Colab/Kaggle collection notebook with checked
+official archive links (27:19:45 total), per-source queue state, bounded seek-based
+chunks, persistent checkpoints, source-hash caching and temporary-media cleanup.
+The notebook collects raw OCR, proposed context, distributed review frames and
+uncalibrated minimap crops. Historical source groups and reserved evaluation
+broadcasts stay separate. No new player catalog, labels or training are invented.
+Local validation: 113 tests pass with optional Pillow; sparse seek positions were
+checked on the original footage. Full cloud downloads/T4 throughput remain untested.
+See BROADCAST_BATCH.md. The earlier single-video notebook embeds the updated worker.
+
 Added a source-preserving scene proposal stager and three focused tests. The
 private pilot pack contains 91 original frames with separate scene/perspective
 labels, image checksums, excluded-transition records and unassigned splits. Image

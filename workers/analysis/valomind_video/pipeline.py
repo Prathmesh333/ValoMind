@@ -6,10 +6,11 @@ import json
 import math
 import re
 import sqlite3
+from functools import lru_cache
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "video_v5"
+VERSION = "video_v6"
 FIELDS = [
     "observation_id",
     "job_id",
@@ -100,6 +101,16 @@ def sha256(path):
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+@lru_cache(maxsize=4)
+def source_digest(path, size, modified_ns):
+    """Hash immutable completed media once per size/mtime during a notebook session."""
+    digest = sha256(path)
+    stat = Path(path).stat()
+    if (stat.st_size, stat.st_mtime_ns) != (size, modified_ns):
+        raise RuntimeError("Source changed while computing its checksum")
+    return digest
 
 
 def download(url, root, cookie_file=None, js_runtime=None):
@@ -255,6 +266,10 @@ def process(
     review_sample_limit=24,
     cookie_file=None,
     js_runtime=None,
+    media_root=None,
+    sampling_mode="sequential",
+    max_new_samples=None,
+    review_every_samples=5,
 ):
     """OCR bootstrap works without weights; optional YOLO adds custom detector proposals."""
     import cv2
@@ -267,6 +282,18 @@ def process(
 
     catalog = validate_catalog(catalog or [])
     gate = SegmentGate(confirm_samples)
+    if review_every_samples is None:
+        raise ValueError("review_every_samples must be a positive integer")
+    if sampling_mode not in {"sequential", "seek"}:
+        raise ValueError("sampling_mode must be sequential or seek")
+    for value, name in [
+        (max_new_samples, "max_new_samples"),
+        (review_every_samples, "review_every_samples"),
+    ]:
+        if value is not None and (
+            not isinstance(value, int) or isinstance(value, bool) or value < 1
+        ):
+            raise ValueError(f"{name} must be a positive integer")
     if not isinstance(review_sample_limit, int) or review_sample_limit < 0:
         raise ValueError("review_sample_limit must be a nonnegative integer")
     portrait_matcher = None
@@ -303,9 +330,9 @@ def process(
         if model.task != "detect":
             raise ValueError("Expected object detection weights")
     source = (
-        download(url, root, cookie_file=cookie_file, js_runtime=js_runtime)
+        download(url, media_root or root, cookie_file=cookie_file, js_runtime=js_runtime)
         if cookie_file or js_runtime
-        else download(url, root)
+        else download(url, media_root or root)
     )
     key = video_id(url)
     roster_catalog = roster_catalog or SOURCE_CATALOG.get(key)
@@ -322,7 +349,11 @@ def process(
             "pipeline_version": VERSION,
             "video_id": key,
             "source_url": f"https://www.youtube.com/watch?v={key}",
-            "source_sha256": sha256(source),
+            "source_sha256": source_digest(
+                str(Path(source).resolve()),
+                Path(source).stat().st_size,
+                Path(source).stat().st_mtime_ns,
+            ),
             "model_sha256": model_hash,
             "interval_seconds": interval_seconds,
             "end_seconds": end_seconds,
@@ -341,6 +372,9 @@ def process(
             "retry_version": RETRY_VERSION,
             "portrait_matcher": portrait_matcher.identity if portrait_matcher else None,
             "review_sample_limit": review_sample_limit,
+            "sampling_mode": sampling_mode,
+            "review_every_samples": review_every_samples,
+            "sparse_timestamp_method": "frame_index_over_reported_fps",
         },
     )
     job.portrait_matcher = portrait_matcher
@@ -356,8 +390,29 @@ def process(
         reader = easyocr.Reader(["en"], gpu=ocr_device)
         number = 0
         processed = 0
+        complete = False
+        expected_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) if sampling_mode == "seek" else 0
+        if sampling_mode == "seek" and expected_frames <= 0:
+            raise ValueError("Seek sampling requires a readable frame count")
         while end_seconds is None or number / fps < end_seconds:
+            if max_new_samples is not None and processed >= max_new_samples:
+                break
+            if sampling_mode == "seek":
+                if number >= expected_frames:
+                    complete = True
+                    break
+                if job.done(number):
+                    job.restore_gate(number, gate)
+                    number += step
+                    continue
+                if not cap.set(cv2.CAP_PROP_POS_FRAMES, number):
+                    raise RuntimeError("Decoder does not support seek sampling")
             if not cap.grab():
+                if sampling_mode == "seek":
+                    raise RuntimeError(
+                        f"Unexpected decode failure before source end at frame {number}"
+                    )
+                complete = True
                 break
             if number % step == 0 and job.done(number):
                 job.restore_gate(number, gate)
@@ -365,6 +420,12 @@ def process(
                 ok, frame = cap.retrieve()
                 if not ok:
                     raise RuntimeError(f"Frame decode failed at {number}")
+                if sampling_mode == "seek":
+                    landed = cap.get(cv2.CAP_PROP_POS_FRAMES) - 1
+                    if not math.isfinite(landed) or abs(landed - number) > 0.5:
+                        raise RuntimeError(
+                            "Decoder landed on an unexpected frame; use sequential sampling"
+                        )
                 proposals = []
                 segment_type, action, reason = "unfiltered", "extract", "Filter disabled"
                 probe = []
@@ -436,7 +497,10 @@ def process(
                     shape = frame.shape
                     records = job.records(number, round(number / fps * 1000), proposals)
                     proposals.extend(retry(frame, reader, records, catalog=roster_catalog))
-                if number // step % 5 == 0 and review_count < review_sample_limit:
+                if (
+                    number // step % review_every_samples == 0
+                    and review_count < review_sample_limit
+                ):
                     review_folder.mkdir(exist_ok=True)
                     review_image = review_folder / f"{number:09d}.jpg"
                     if not cv2.imwrite(str(review_image), frame):
@@ -473,9 +537,25 @@ def process(
                     print(
                         f"Saved {processed} additional sampled frames; source time {number / fps:.1f}s"
                     )
-            number += 1
+            number += step if sampling_mode == "seek" else 1
+        else:
+            complete = True
         if number == 0:
             raise RuntimeError("Video decoded no frames")
+        progress = job.folder / "progress.json"
+        temporary = progress.with_suffix(".json.tmp")
+        temporary.write_text(
+            json.dumps(
+                {
+                    "complete": complete,
+                    "next_frame_index": number,
+                    "new_samples": processed,
+                    "sampling_mode": sampling_mode,
+                }
+            ),
+            encoding="utf-8",
+        )
+        temporary.replace(progress)
         return job.export()
     finally:
         cap.release()

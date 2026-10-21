@@ -1,5 +1,11 @@
 # Colab / Kaggle video jobs
 
+For the five long official playoff archives, use `VCT_playoffs_batch.ipynb`.
+It scans full broadcasts sequentially on GPU 0, checkpoints to Drive, keeps one
+temporary video at a time and exports raw/proposed/unlabeled datasets. It does not
+reuse the earlier highlight's player aliases. See [batch instructions](../docs/BROADCAST_BATCH.md)
+for prefilled links, durations, continuation and YouTube recovery.
+
 Persistent YouTube verification on this existing video: set SOURCE_ARCHIVE in the
 new recovery cell to the FIRST results ZIP in your private cloud storage. It
 restores only the original source video/metadata into cache and validates its hash

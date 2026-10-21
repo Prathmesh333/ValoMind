@@ -1,0 +1,70 @@
+{
+  "schema_version": "broadcast_sources_v1",
+  "sources": [
+    {
+      "video_id": "7t-guum-eZ4",
+      "url": "https://www.youtube.com/watch?v=7t-guum-eZ4",
+      "title": "EDG vs. TE - VALORANT Champions Seoul - Playoffs",
+      "duration_seconds": 18345,
+      "channel_id": "UCA1d3HFGFUmkKr2JIUA5Vlw",
+      "channel_name": "VALORANT Champions Tour",
+      "is_live_content": true,
+      "is_live_now": false,
+      "publish_date": "2024-08-14T05:58:35-07:00",
+      "metadata_checked_date": "2026-10-21",
+      "dataset_role": "train_proposed"
+    },
+    {
+      "video_id": "Z_NvZ7kVffc",
+      "url": "https://www.youtube.com/watch?v=Z_NvZ7kVffc",
+      "title": "TH vs. FNC - VALORANT Champions Seoul - Playoffs Day 2",
+      "duration_seconds": 20119,
+      "channel_id": "UCA1d3HFGFUmkKr2JIUA5Vlw",
+      "channel_name": "VALORANT Champions Tour",
+      "is_live_content": true,
+      "is_live_now": false,
+      "publish_date": "2024-08-15T06:16:11-07:00",
+      "metadata_checked_date": "2026-10-21",
+      "dataset_role": "train_proposed"
+    },
+    {
+      "video_id": "zPZP_ja5iIU",
+      "url": "https://www.youtube.com/watch?v=zPZP_ja5iIU",
+      "title": "FNC vs. G2 - VALORANT Champions Seoul - Playoffs Day 3",
+      "duration_seconds": 17060,
+      "channel_id": "UCA1d3HFGFUmkKr2JIUA5Vlw",
+      "channel_name": "VALORANT Champions Tour",
+      "is_live_content": true,
+      "is_live_now": false,
+      "publish_date": "2024-08-16T05:28:11-07:00",
+      "metadata_checked_date": "2026-10-21",
+      "dataset_role": "train_proposed"
+    },
+    {
+      "video_id": "68LiZLjgwrI",
+      "url": "https://www.youtube.com/watch?v=68LiZLjgwrI",
+      "title": "TH vs. LEV - VALORANT Champions Seoul - Playoffs Day 4",
+      "duration_seconds": 23810,
+      "channel_id": "UCA1d3HFGFUmkKr2JIUA5Vlw",
+      "channel_name": "VALORANT Champions Tour",
+      "is_live_content": true,
+      "is_live_now": false,
+      "publish_date": "2024-08-17T07:34:13-07:00",
+      "metadata_checked_date": "2026-10-21",
+      "dataset_role": "validation_reserved"
+    },
+    {
+      "video_id": "tj3tfTcrWTI",
+      "url": "https://www.youtube.com/watch?v=tj3tfTcrWTI",
+      "title": "LEV vs. TH - VALORANT Champions Seoul - Lower Bracket Final",
+      "duration_seconds": 19051,
+      "channel_id": "UCA1d3HFGFUmkKr2JIUA5Vlw",
+      "channel_name": "VALORANT Champions Tour",
+      "is_live_content": true,
+      "is_live_now": false,
+      "publish_date": "2024-08-24T05:19:04-07:00",
+      "metadata_checked_date": "2026-10-21",
+      "dataset_role": "test_reserved"
+    }
+  ]
+}

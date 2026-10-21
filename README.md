@@ -1,6 +1,12 @@
 # ValoMind
 
-[Open the video-processing notebook in Colab](https://colab.research.google.com/github/Prathmesh333/ValoMind/blob/main/notebooks/VCT_video_jobs.ipynb)
+[Open the five-broadcast playoff collector in Colab](https://colab.research.google.com/github/Prathmesh333/ValoMind/blob/main/notebooks/VCT_playoffs_batch.ipynb)
+
+The batch notebook includes five official archived playoff broadcasts, full-video
+sampling, Drive checkpoints and a single-GPU resumable queue. See
+[batch instructions](docs/BROADCAST_BATCH.md). Labels remain proposed/unreviewed.
+
+[Open the single-video preview notebook in Colab](https://colab.research.google.com/github/Prathmesh333/ValoMind/blob/main/notebooks/VCT_video_jobs.ipynb)
 
 The notebook accepts YouTube links and runs sampled broadcast filtering, OCR,
 roster proposals and optional model training in the cloud. Select a T4 GPU and
